@@ -11,6 +11,7 @@ Rectangle {
 
     signal viewRequested(string view)
     signal upperDecksToggled
+    signal jogTuningRequested
     signal settingsRequested
     signal legacySettingsRequested
 
@@ -45,6 +46,13 @@ Rectangle {
         }
         Item {
             Layout.fillWidth: true
+        }
+        NavButton {
+            label: "JOG"
+            Layout.fillHeight: true
+            Layout.preferredWidth: 130
+
+            onActivated: root.jogTuningRequested()
         }
         NavButton {
             accent: "#ffb300"

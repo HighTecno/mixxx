@@ -14,6 +14,8 @@ Item {
     id: root
 
     property var sidebar: librarySources.sidebar()
+    // exposed so the touch UI's on-screen keyboard can type into it
+    property alias searchInput: searchField
 
     function applySearch() {
         if (root.sidebar && root.sidebar.tracklist) {

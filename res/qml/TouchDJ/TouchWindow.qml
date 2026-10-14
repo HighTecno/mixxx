@@ -104,6 +104,7 @@ Item {
             Layout.preferredHeight: 76
 
             onLegacySettingsRequested: Mixxx.PreferencesDialog.show()
+            onJogTuningRequested: jogPopup.opened ? jogPopup.close() : jogPopup.open()
             onSettingsRequested: settingsPopup.open()
             onUpperDecksToggled: {
                 root.upperDecks = !root.upperDecks;
@@ -153,6 +154,10 @@ Item {
                 onDeveloperToolsRequested: root.openDevTools()
             }
         }
+    }
+
+    JogTuningPopup {
+        id: jogPopup
     }
 
     Skin.Settings {

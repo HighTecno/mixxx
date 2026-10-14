@@ -11,6 +11,8 @@ Rectangle {
     // >0: the next load goes into this sampler
     property int samplerTarget: 0
 
+    property bool keyboardShown: false
+
     signal closeRequested
 
     function focusSearch() {
@@ -51,6 +53,15 @@ Rectangle {
         group: "[Sampler" + Math.max(1, root.samplerTarget) + "]"
         key: "LoadSelectedTrack"
     }
+    // show the keyboard as soon as the search field is touched
+    Connections {
+        function onActiveFocusChanged() {
+            if (lib.searchInput.activeFocus)
+                root.keyboardShown = true;
+        }
+
+        target: lib.searchInput
+    }
     // go back to the decks shortly after loading so the DJ sees the result
     Timer {
         id: closeTimer
@@ -71,6 +82,18 @@ Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 90
 
+            NavButton {
+                accent: Theme.blue
+                label: root.keyboardShown ? "⌨  HIDE" : "⌨  SEARCH"
+                Layout.preferredHeight: 90
+                Layout.preferredWidth: 260
+
+                onActivated: {
+                    root.keyboardShown = !root.keyboardShown;
+                    if (root.keyboardShown)
+                        lib.searchInput.forceActiveFocus();
+                }
+            }
             NavButton {
                 accent: "#3ddc84"
                 label: "LOAD → SAMPLER " + root.samplerTarget
@@ -122,6 +145,18 @@ Rectangle {
                 scale: libraryHolder.zoom
                 transformOrigin: Item.TopLeft
                 width: libraryHolder.width / libraryHolder.zoom
+            }
+        }
+
+        OnScreenKeyboard {
+            target: lib.searchInput
+            visible: root.keyboardShown
+            Layout.fillWidth: true
+            Layout.preferredHeight: implicitHeight
+
+            onDone: {
+                root.keyboardShown = false;
+                lib.searchInput.focus = false;
             }
         }
     }

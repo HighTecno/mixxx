@@ -1,5 +1,6 @@
 import Mixxx 1.0 as Mixxx
 import QtQuick
+import "Tuning"
 import "../Theme"
 
 // Touch jogwheel.
@@ -14,11 +15,11 @@ Item {
     // fraction of the radius below which a touch is a scratch, above it a bend
     property real ringStart: 0.74
     // jog units per radian of ring movement; tune on the device
-    property real bendGain: 1.8
+    property real bendGain: JogTuning.bendGain
     // smoothing time constant in seconds: the finger position arrives at the
     // touch rate (60-120 Hz); we glide towards it once per display frame so the
     // audio sees continuous motion instead of steps. Lower = tighter, higher = smoother.
-    property real smoothing: 0.02
+    property real smoothing: JogTuning.smoothing
     readonly property real diameter: Math.min(width, height)
     readonly property real rpm: vinylSpeed.value > 0 ? vinylSpeed.value : 33.33
     readonly property real rps: Math.PI * rpm / 60.0
