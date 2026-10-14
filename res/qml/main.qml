@@ -4,10 +4,13 @@ import QtQuick 2.12
 import QtQuick.Controls
 import QtQuick.Window 2.12
 import "Theme"
+import "TouchDJ" as TouchDJ
 
 ApplicationWindow {
     id: root
 
+    // the touch DJ UI always runs fullscreen
+    readonly property bool touchUi: true
     readonly property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     readonly property int designWidth: 1792
     readonly property int designHeight: 1008
@@ -24,7 +27,7 @@ ApplicationWindow {
         if (!Mixxx.Core.ready) {
             return;
         }
-        root.visibility = Mixxx.Config.configStartInFullscreenKey || isMobile
+        root.visibility = touchUi || Mixxx.Config.configStartInFullscreenKey || isMobile
                 ? Window.FullScreen
                 : Window.Windowed;
     }
@@ -52,7 +55,7 @@ ApplicationWindow {
             }
         }
         sourceComponent: Component {
-            MainWindow {
+            TouchDJ.TouchWindow {
                 applicationWindow: root
             }
         }
