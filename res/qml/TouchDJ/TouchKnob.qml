@@ -1,6 +1,7 @@
 import Mixxx 1.0 as Mixxx
 import QtQuick
 import "../Theme"
+import "ValueFormat.js" as VF
 
 // Knob driven by relative vertical drag. Double tap resets.
 Item {
@@ -9,6 +10,9 @@ Item {
     property string group
     property string key
     property string label: ""
+    property string readoutText: ""
+    property string format: VF.kindFor(group, key)
+    readonly property string readout: readoutText !== "" ? readoutText : VF.format(format, ctl.value, ctl.parameter)
     property color accent: Theme.blue
     // pixels of finger travel for the full range
     property real sensitivity: 320
@@ -49,6 +53,18 @@ Item {
         }
     }
     Text {
+        anchors.horizontalCenter: body.horizontalCenter
+        color: "white"
+        font.bold: true
+        font.pixelSize: 17
+        fontSizeMode: Text.Fit
+        horizontalAlignment: Text.AlignHCenter
+        minimumPixelSize: 10
+        text: root.readout
+        width: body.width * 0.8
+        y: body.y + body.height * 0.56
+    }
+    Text {
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         color: Theme.lightGray2
@@ -72,10 +88,7 @@ Item {
             ctl.parameter = Math.max(0, Math.min(1, startP + d / root.sensitivity));
         }
     }
-    TapHandler {
-        onTapped: (eventPoint, button) => {
-            if (tapCount === 2)
-                ctl.reset();
-        }
+    ResetOnDoubleTap {
+        onTriggered: ctl.reset()
     }
 }

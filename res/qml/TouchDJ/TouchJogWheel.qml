@@ -14,7 +14,11 @@ Item {
     // fraction of the radius below which a touch is a scratch, above it a bend
     property real ringStart: 0.74
     // jog units per radian of ring movement; tune on the device
-    property real bendGain: 1.2
+    property real bendGain: 1.8
+    // smoothing time constant in seconds: the finger position arrives at the
+    // touch rate (60-120 Hz); we glide towards it once per display frame so the
+    // audio sees continuous motion instead of steps. Lower = tighter, higher = smoother.
+    property real smoothing: 0.02
     readonly property real diameter: Math.min(width, height)
     readonly property real rpm: vinylSpeed.value > 0 ? vinylSpeed.value : 33.33
     readonly property real rps: Math.PI * rpm / 60.0
@@ -127,11 +131,32 @@ Item {
         }
     }
 
+    // glide towards the finger once per rendered frame
+    FrameAnimation {
+        running: ph.active && ph.mode !== ""
+
+        onTriggered: {
+            const a = 1 - Math.exp(-frameTime / Math.max(0.001, root.smoothing));
+            if (ph.mode === "scratch") {
+                ph.smoothPos += (ph.targetPos - ph.smoothPos) * a;
+                scratchPosition.value = ph.smoothPos;
+            } else {
+                const take = ph.pendingBend * a;
+                ph.pendingBend -= take;
+                jog.value += take;
+            }
+        }
+    }
+
     PointHandler {
         id: ph
 
         property string mode: ""
         property real lastAngle: 0
+        // where the finger is (target) vs. what we have fed to the engine so far
+        property real targetPos: 0
+        property real smoothPos: 0
+        property real pendingBend: 0
 
         function angleOf(pos) {
             return Math.atan2(pos.y - root.height / 2, pos.x - root.width / 2);
@@ -152,6 +177,9 @@ Item {
                 const pos = point.position;
                 const r = Math.hypot(pos.x - root.width / 2, pos.y - root.height / 2);
                 lastAngle = angleOf(pos);
+                targetPos = 0;
+                smoothPos = 0;
+                pendingBend = 0;
                 if (r > root.diameter / 2) {
                     mode = "";
                 } else if (r < root.diameter / 2 * root.ringStart) {
@@ -162,8 +190,14 @@ Item {
                     mode = "bend";
                 }
             } else {
-                if (mode === "scratch")
+                // hand over whatever the glide hasn't delivered yet, then let go
+                if (mode === "scratch") {
+                    scratchPosition.value = targetPos;
                     scratchEnable.value = 0;
+                } else if (mode === "bend") {
+                    jog.value += pendingBend;
+                    pendingBend = 0;
+                }
                 mode = "";
             }
         }
@@ -175,9 +209,9 @@ Item {
             lastAngle = a;
             if (mode === "scratch") {
                 if (root.rps > 0 && sampleRate.value > 0)
-                    scratchPosition.value += delta * sampleRate.value / root.rps;
+                    targetPos += delta * sampleRate.value / root.rps;
             } else {
-                jog.value += delta * root.bendGain;
+                pendingBend += delta * root.bendGain;
             }
         }
     }

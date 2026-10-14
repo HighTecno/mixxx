@@ -1,6 +1,7 @@
 import Mixxx 1.0 as Mixxx
 import QtQuick
 import "../Theme"
+import "ValueFormat.js" as VF
 
 // Relative-drag fader: the whole area is the touch target, dragging moves the
 // handle by the finger's travel (no jumping). Double tap resets to default.
@@ -13,6 +14,10 @@ Item {
     property color accent: Theme.blue
     property real handleSize: 130
     property string label: ""
+    // set to override the automatic readout (e.g. tempo in +/- %)
+    property string readoutText: ""
+    property string format: VF.kindFor(group, key)
+    readonly property string readout: readoutText !== "" ? readoutText : VF.format(format, ctl.value, root.p)
     readonly property real travel: Math.max(1, (horizontal ? width : height) - handleSize)
     property real dragParam: 0
     readonly property real p: dh.active ? dragParam : ctl.parameter
@@ -55,6 +60,21 @@ Item {
             height: root.horizontal ? parent.height * 0.6 : 6
             width: root.horizontal ? 6 : parent.width * 0.6
         }
+        Text {
+            anchors.bottom: root.horizontal ? undefined : parent.bottom
+            anchors.bottomMargin: 8
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: root.horizontal ? parent.top : undefined
+            anchors.topMargin: 8
+            color: "white"
+            font.bold: true
+            font.pixelSize: 20
+            fontSizeMode: Text.Fit
+            minimumPixelSize: 11
+            text: root.readout
+            width: parent.width - 8
+            horizontalAlignment: Text.AlignHCenter
+        }
     }
     Text {
         anchors.horizontalCenter: parent.horizontalCenter
@@ -85,10 +105,7 @@ Item {
             ctl.parameter = np;
         }
     }
-    TapHandler {
-        onTapped: (eventPoint, button) => {
-            if (tapCount === 2)
-                ctl.reset();
-        }
+    ResetOnDoubleTap {
+        onTriggered: ctl.reset()
     }
 }

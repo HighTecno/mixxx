@@ -1,6 +1,7 @@
 import Mixxx 1.0 as Mixxx
 import QtQuick
 import QtQuick.Layouts
+import ".." as Skin
 import "../Theme"
 
 // One deck: tempo fader on the outer edge, big jogwheel, transport, 8 hotcues.
@@ -23,6 +24,12 @@ Item {
         return m + ":" + (r < 10 ? "0" : "") + r;
     }
 
+    Mixxx.ControlProxy {
+        id: rateRatio
+
+        group: root.group
+        key: "rate_ratio"
+    }
     Mixxx.ControlProxy {
         id: bpm
 
@@ -58,6 +65,10 @@ Item {
             group: root.group
             key: "rate"
             label: "TEMPO"
+            readoutText: {
+                const pct = (rateRatio.value - 1) * 100;
+                return (pct >= 0 ? "+" : "") + pct.toFixed(1) + "%";
+            }
             Layout.fillHeight: true
             Layout.preferredWidth: 110
         }
@@ -91,6 +102,21 @@ Item {
                     font.bold: true
                     font.pixelSize: 30
                     text: "-" + root.fmt(root.remaining)
+                }
+            }
+
+            // whole-track colored overview: see the drop coming, tap to jump there
+            Rectangle {
+                color: Theme.deckBackgroundColor
+                radius: 8
+                Layout.fillHeight: false
+                Layout.fillWidth: true
+                Layout.preferredHeight: 90
+
+                Skin.WaveformOverview {
+                    anchors.fill: parent
+                    anchors.margins: 2
+                    group: root.group
                 }
             }
 
@@ -142,7 +168,7 @@ Item {
                 Layout.fillWidth: true
 
                 Repeater {
-                    model: ["HOTCUES", "LOOP / JUMP", "KEY / FX"]
+                    model: ["HOTCUES", "LOOP / JUMP", "KEY / FX", "GRID"]
 
                     NavButton {
                         required property int index
@@ -241,6 +267,25 @@ Item {
                         }
                     }
                     TouchButton { group: root.group; key: "eject"; label: "EJECT"; momentary: true; fontSize: 20; Layout.fillHeight: true; Layout.fillWidth: true }
+                }
+
+                // 3: beatgrid correction
+                GridLayout {
+                    columnSpacing: 10
+                    columns: 5
+                    rowSpacing: 10
+
+                    TouchButton { accent: "#3ddc84"; fontSize: 20; group: root.group; key: "beats_translate_curpos"; label: "GRID HERE"; momentary: true; Layout.fillHeight: true; Layout.fillWidth: true }
+                    TouchButton { fontSize: 20; group: root.group; key: "beats_translate_earlier"; label: "◀ SHIFT"; momentary: true; Layout.fillHeight: true; Layout.fillWidth: true }
+                    TouchButton { fontSize: 20; group: root.group; key: "beats_translate_later"; label: "SHIFT ▶"; momentary: true; Layout.fillHeight: true; Layout.fillWidth: true }
+                    TouchButton { accent: "#ffb300"; fontSize: 20; group: root.group; key: "bpm_tap"; label: "TAP BPM"; momentary: true; Layout.fillHeight: true; Layout.fillWidth: true }
+                    TouchButton { accent: "#ff4040"; fontSize: 20; group: root.group; key: "bpmlock"; label: "LOCK"; Layout.fillHeight: true; Layout.fillWidth: true }
+
+                    TouchButton { fontSize: 20; group: root.group; key: "beats_adjust_slower"; label: "BPM −"; momentary: true; Layout.fillHeight: true; Layout.fillWidth: true }
+                    TouchButton { fontSize: 20; group: root.group; key: "beats_adjust_faster"; label: "BPM +"; momentary: true; Layout.fillHeight: true; Layout.fillWidth: true }
+                    TouchButton { fontSize: 20; group: root.group; key: "beats_set_halve"; label: "BPM ÷2"; momentary: true; Layout.fillHeight: true; Layout.fillWidth: true }
+                    TouchButton { fontSize: 20; group: root.group; key: "beats_set_double"; label: "BPM ×2"; momentary: true; Layout.fillHeight: true; Layout.fillWidth: true }
+                    TouchButton { fontSize: 20; group: root.group; key: "beats_undo_adjustment"; label: "UNDO"; momentary: true; Layout.fillHeight: true; Layout.fillWidth: true }
                 }
             }
         }
